@@ -1,0 +1,46 @@
+version: "3.9"
+
+name: yumy-customer
+
+services:
+  customer_service:
+    build:
+      context: ../server/customer_service
+      dockerfile: Dockerfile
+    image: yumy-customer-service:latest
+    env_file:
+      - ../server/customer_service/.env
+    ports:
+      - "8085:8085"
+      - "9090:9090"
+      # host:container
+    restart: unless-stopped
+    networks:
+      - customer_net
+
+  customer_frontend:
+    build:
+      context: ../client/customer
+      dockerfile: Dockerfile
+      args:
+        # This URL is embedded in the built frontend and used by the browser
+        REACT_APP_CUSTOMER_URL: ${REACT_APP_CUSTOMER_URL}
+        REACT_APP_RESTAURANT_URL: ${REACT_APP_RESTAURANT_URL}
+        REACT_APP_GOOGLE_CLIENT_ID: ${REACT_APP_GOOGLE_CLIENT_ID}
+        REACT_APP_GOOGLE_CLIENT_SECRET: ${REACT_APP_GOOGLE_CLIENT_SECRET}
+        REACT_APP_MAPBOX_TOKEN: ${REACT_APP_MAPBOX_TOKEN}
+    env_file:
+      - ../client/customer/.env
+    image: yumy-customer-frontend:latest
+    ports:
+      - "3000:80"
+
+    restart: unless-stopped
+    depends_on:
+      - customer_service
+    networks:
+      - customer_net
+
+networks:
+  customer_net:
+    driver: bridge
