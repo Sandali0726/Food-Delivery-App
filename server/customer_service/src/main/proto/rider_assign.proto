@@ -1,0 +1,19 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+package rider;
+
+option java_multiple_files = true;
+option java_package = "com.example.grpc";
+option java_outer_classname = "RiderAssignProto";
+
+service RiderEmailService {
+  rpc GetRiderEmail (RiderEmailRequest)
+      returns (RiderEmailResponse);
+}
+message RiderEmailRequest {
+  int64 order_id = 1;
+  string rider_email = 2;
+}
+message RiderEmailResponse {
+  string message = 1;
+}

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.restaurant_service.grpc";
+option java_outer_classname = "RestaurantProto";
+
+service RestaurantService {
+  rpc GetRestaurantBasicInfo (RestaurantRequest)
+      returns (RestaurantResponse);
+}
+
+message RestaurantRequest {
+  string email = 1;
+}
+
+message RestaurantResponse {
+  string name = 1;
+  string contactNumber = 2;
+}

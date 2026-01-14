@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package rider;
+
+option java_multiple_files = true;
+option java_package = "com.example.grpc";
+option java_outer_classname = "RiderLocationProto";
+
+
+service RiderLocationQueryService {
+  rpc getCurrentLocation (LocationRequest)
+      returns (RiderLocationResponse);
+}
+
+message LocationRequest {
+  int64 orderId = 1;
+}
+
+message RiderLocationResponse {
+  int64 orderId = 1;
+  double lat = 2;
+  double lng = 3;
+}

@@ -1,0 +1,195 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.8'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.google.protobuf' version '0.9.5'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+description = 'RiderService'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+//ext {
+//    set('springGrpcVersion', "1.0.0")
+//}
+
+ext {
+    grpcVersion = '1.77.0'
+}
+
+dependencies {
+
+    /* ================= CORE SPRING BOOT ================= */
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    /* ================= DATABASE ================= */
+    runtimeOnly 'org.postgresql:postgresql'
+
+    /* ================= gRPC ================= */
+//    implementation 'org.springframework.grpc:spring-grpc-server-web-spring-boot-starter'
+//    implementation 'org.springframework.grpc:spring-grpc-server-spring-boot-starter'
+//    implementation 'io.grpc:grpc-services'
+//    implementation 'org.springframework.grpc:spring-grpc-server-spring-boot-starter'
+//    implementation 'io.grpc:grpc-services'
+//    implementation 'io.grpc:grpc-stub'
+//    implementation 'io.grpc:grpc-protobuf'
+//    implementation 'io.grpc:grpc-netty-shaded'
+//    implementation 'net.devh:grpc-spring-boot-starter:2.14.0.RELEASE'
+//    implementation 'io.grpc:grpc-api:1.77.0'
+//    implementation 'io.grpc:grpc-netty-shaded:1.77.0'
+//    implementation 'io.grpc:grpc-protobuf:1.77.0'
+//    implementation 'io.grpc:grpc-stub:1.77.0'
+
+//     ✅ net.devh gRPC Spring Boot starter (SERVER)
+    implementation 'net.devh:grpc-server-spring-boot-starter:3.1.0.RELEASE'
+
+    // ✅ gRPC core (ALL SAME VERSION)
+    implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+    implementation "io.grpc:grpc-stub:${grpcVersion}"
+
+
+//     Required for Java 9+
+    compileOnly 'org.apache.tomcat:annotations-api:6.0.53'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+
+
+    /* ================= KAFKA STREAMS ================= */
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    /* ================= DEV TOOLS ================= */
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    /* ================= LOMBOK ================= */
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    /* ================= MAPSTRUCT ================= */
+    implementation 'org.mapstruct:mapstruct:1.6.2'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.2'
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+
+    /* ================= VALIDATION ================= */
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    /* ================= JWT ================= */
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+    /* ================= JACKSON JSR310 ================= */
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+
+    /* ================= Cloudinary ================= */
+    // https://mvnrepository.com/artifact/com.cloudinary/cloudinary-core
+    implementation 'com.cloudinary:cloudinary-http44:1.38.0'
+
+    /* ================= MAIL ================= */
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+
+    /* ================= WEBSOCKET ================= */
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+
+
+    /* ================= FLYWAY MIGRATIONS ================= */
+    // Temporarily commented out to avoid prepared statement conflict
+    // implementation 'org.flywaydb:flyway-core:9.16.0'
+
+//    /* ================= PROTOBUF / GRPC ================= */
+//
+//    implementation 'net.devh:grpc-server-spring-boot-starter:2.15.0.RELEASE'
+//    implementation 'net.devh:grpc-client-spring-boot-starter:2.15.0.RELEASE'
+//    implementation 'com.google.protobuf:protobuf-java:3.25.1'
+
+    /* ================= TESTING ================= */
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+//dependencyManagement {
+//    imports {
+//        mavenBom "org.springframework.grpc:spring-grpc-dependencies:${grpcVersion}"
+//    }
+//}
+
+//protobuf {
+//    protoc {
+//        artifact = 'com.google.protobuf:protoc'
+//    }
+//    plugins {
+//        grpc {
+//            artifact = 'io.grpc:protoc-gen-grpc-java'
+//        }
+//    }
+//    generateProtoTasks {
+//        all()*.plugins {
+//            grpc {
+//                option '@generated=omit'
+//            }
+//        }
+//    }
+//}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.25.3"
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+        }
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.plugins {
+                grpc {}
+            }
+        }
+    }
+}
+
+tasks.named('bootBuildImage') {
+    runImage = 'paketobuildpacks/ubuntu-noble-run:latest'
+}
+
+bootJar {
+    enabled = true
+    archiveClassifier = ''
+    mainClass = 'com.example.riderservice.RiderServiceApplication'
+    manifest {
+        attributes(
+            'Main-Class': 'org.springframework.boot.loader.launch.JarLauncher',
+            'Start-Class': 'com.example.riderservice.RiderServiceApplication'
+        )
+    }
+}
+
+// Ensure the regular jar task is disabled to avoid conflicts
+jar {
+    enabled = false
+    archiveClassifier = ''
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

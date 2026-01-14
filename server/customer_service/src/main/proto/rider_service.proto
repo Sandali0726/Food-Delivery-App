@@ -1,0 +1,72 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+package restaurant;
+
+option java_multiple_files = true;
+option java_package = "com.example.grpc";
+option java_outer_classname = "CustomerDetailsProto";
+
+//give rider reviews
+service RiderReviewService {
+  rpc GetRiderReviews (RiderReviewRequest)
+      returns (RiderReviewResponse);
+
+
+}
+message RiderReviewRequest {
+  string rider_email = 1; // was rider_id; changed to align with server usage getRiderEmail()
+}
+message RiderReviewResponse {
+  message Review {
+    string customer_email = 1;
+    string review = 2;
+    float rider_rating = 3;
+    int64 order_id = 4;
+    google.protobuf.Timestamp created_at = 5;
+
+  }
+  repeated Review reviews = 1;
+}
+
+//get order details
+service OrderService {
+  rpc GetOrderDetails (OrderDetailsRequest)
+      returns (OrderDetailsResponse);
+}
+message OrderDetailsRequest {
+  string order_id = 1;
+}
+message OrderDetailsResponse {
+  message OrderItem {
+    string order_name = 1;
+    int64 order_quantity = 2;
+  }
+  repeated OrderItem items = 1;
+}
+
+//change order table status
+service TableStatusService {
+  rpc ChangeTableStatus (TableStatusRequest)
+      returns (TableStatusResponse);
+}
+message TableStatusRequest {
+  int64 table_id = 1;
+  string status = 2;
+}
+message TableStatusResponse {
+  string message = 1;
+}
+//get review rate per order
+service ReviewRateService {
+  rpc GetReviewRate (ReviewRateRequest)
+      returns (ReviewRateResponse);
+}
+message ReviewRateRequest {
+  int64 order_id = 1;
+}
+message ReviewRateResponse {
+  float rating = 1;
+  string review = 2;
+}
+
+

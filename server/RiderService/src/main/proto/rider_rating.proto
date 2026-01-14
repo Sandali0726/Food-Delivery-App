@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package restaurant;
+
+option java_multiple_files = true;
+option java_package = "com.example.grpc";
+option java_outer_classname = "RiderRatingProto";
+
+service RiderRatingService {
+
+  rpc UpdateRiderRating (RiderRatingUpdateRequest)
+      returns (RiderRatingUpdateResponse);
+
+}
+
+message RiderRatingUpdateRequest {
+  string rider_email = 1;
+  float new_rating = 2;
+}
+
+message RiderRatingUpdateResponse {
+  string message = 1;
+}

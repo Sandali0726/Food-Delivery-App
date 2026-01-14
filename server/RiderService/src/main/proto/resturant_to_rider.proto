@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.restaurant_service.grpc";
+option java_outer_classname = "DeliveryProto";
+
+// Service used by delivery drivers to interact with delivery requests
+service DeliveryService {
+  // Accept a delivery request: sets deliveryId and changes status to ASSIGNED
+  rpc AcceptDeliveryRequest (AcceptDeliveryRequestRequest) returns (DeliveryAcceptResponse);
+}
+
+message AcceptDeliveryRequestRequest {
+  // The restaurant order id this delivery request belongs to
+  int64 order_id = 1;
+  // The id of the delivery person accepting this request
+  string delivery_id = 2;
+}
+
+message DeliveryAcceptResponse {
+  bool success = 1;
+  string message = 2;
+}

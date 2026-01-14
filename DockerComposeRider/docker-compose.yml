@@ -1,0 +1,40 @@
+
+
+services:
+  rider-service:
+    build:
+      context: ../server/RiderService
+      dockerfile: src/Docker/Dockerfile
+    container_name: rider-service
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    ports:
+      - "8080:8080"   # HTTP
+      - "9091:9091"   # gRPC (optional external)
+    env_file:
+      - ../server/RiderService/src/.env
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      # Database configuration will be loaded from application-docker.properties
+      # Kafka is disabled in docker profile
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/auth/hello"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  rider-client:
+    build:
+      context: ../client/RiderClient
+      dockerfile: src/Docker/Dockerfile
+      args:
+        VITE_MAPBOX_TOKEN: ${VITE_MAPBOX_TOKEN}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+    container_name: rider-client
+    ports:
+      - "5173:80"
+    depends_on:
+      rider-service:
+        condition: service_healthy

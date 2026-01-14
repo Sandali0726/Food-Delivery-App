@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package rider;
+
+option java_multiple_files = true;
+option java_package = "com.example.grpc";
+option java_outer_classname = "RiderDetailsProto";
+
+//give rider reviews
+service RiderDetailsService {
+  rpc GetRiderDetails (RiderDetailsRequest)
+      returns (RiderDetailsResponse);
+}
+message RiderDetailsRequest {
+  string rider_email = 1; // was rider_id; changed to align with server usage getRiderEmail()
+}
+message RiderDetailsResponse {
+    string rider_name = 1;
+    string rider_phone = 2;
+    string rider_image = 3;
+    string vehicle_no = 4;
+    string delivery_count = 5;
+    string rating = 6;
+}
+
+
+service RiderEmailService {
+  rpc GetRiderEmail (RiderEmailRequest)
+      returns (RiderEmailResponse);
+}
+message RiderEmailRequest {
+  int64 order_id = 1;
+  string rider_email = 2;
+}
+message RiderEmailResponse {
+  string message = 1;
+}

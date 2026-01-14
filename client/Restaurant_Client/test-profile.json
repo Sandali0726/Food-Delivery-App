@@ -1,0 +1,10 @@
+{
+  "name": "Test Restaurant",
+  "contactNumber": 1234567890,
+  "coverImageUrl": "",
+  "profileImageUrl": "",
+  "description": "Test description",
+  "latitude": 6.9271,
+  "longitude": 79.8612,
+  "isOpen": true
+}

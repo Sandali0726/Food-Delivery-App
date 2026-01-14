@@ -1,0 +1,28 @@
+# Exclude build artifacts and caches
+build/
+.gradle/
+
+# IDE files
+*.iml
+.idea/
+.vscode/
+out/
+
+# VCS
+.git/
+.gitignore
+
+# Logs and temp
+**/*.log
+tmp/
+
+# OS files
+.DS_Store
+
+# Env and secrets
+.env
+*.secret
+
+# Node modules (if present)
+**/node_modules/
+

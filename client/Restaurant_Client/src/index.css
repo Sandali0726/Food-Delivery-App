@@ -1,0 +1,60 @@
+@import url("https://fonts.googleapis.com/css2?family=Impact&display=swap");
+@import "tailwindcss";
+
+:root {
+	font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	color: #0f172a;
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	background-color: #fffaf5;
+	font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.font-bold {
+	font-family: Impact, "Arial Black", sans-serif;
+	font-weight: 500;
+}
+
+@keyframes turbulence {
+	0%, 100% {
+		transform: translate(0, 0) rotate(0deg);
+	}
+	10% {
+		transform: translate(-1px, 1px) rotate(-0.3deg);
+	}
+	20% {
+		transform: translate(1px, -0.5px) rotate(0.2deg);
+	}
+	30% {
+		transform: translate(-0.5px, -1px) rotate(-0.4deg);
+	}
+	40% {
+		transform: translate(1px, 0.5px) rotate(0.3deg);
+	}
+	50% {
+		transform: translate(-1px, -0.5px) rotate(-0.2deg);
+	}
+	60% {
+		transform: translate(0.5px, 1px) rotate(0.4deg);
+	}
+	70% {
+		transform: translate(-1px, 0px) rotate(-0.3deg);
+	}
+	80% {
+		transform: translate(1px, -1px) rotate(0.2deg);
+	}
+	90% {
+		transform: translate(-0.5px, 0.5px) rotate(-0.4deg);
+	}
+}
+
+.animate-turbulence {
+	animation: turbulence 3s ease-in-out infinite;
+}
+
+.bg-gradient-radial {
+	background: radial-gradient(circle at center, var(--tw-gradient-stops));
+}

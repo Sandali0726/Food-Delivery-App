@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rider Registration Test</title>
+</head>
+<body>
+    <h2>Rider Registration Form</h2>
+    <form id="registrationForm" enctype="multipart/form-data">
+        <div>
+            <label>Email:</label>
+            <input type="email" id="email" value="gayashankavishka2@gmail.com" required>
+        </div>
+        <div>
+            <label>Password:</label>
+            <input type="password" id="password" value="1234567" required>
+        </div>
+        <div>
+            <label>First Name:</label>
+            <input type="text" id="first_name" value="Gayashan" required>
+        </div>
+        <div>
+            <label>Last Name:</label>
+            <input type="text" id="last_name" value="De Silva" required>
+        </div>
+        <div>
+            <label>Phone Number:</label>
+            <input type="text" id="phone_number" value="0713553579" required>
+        </div>
+        <div>
+            <label>Default Latitude:</label>
+            <input type="number" step="any" id="default_lat" value="34353536.65" required>
+        </div>
+        <div>
+            <label>Default Longitude:</label>
+            <input type="number" step="any" id="default_lng" value="45446646.45" required>
+        </div>
+        <div>
+            <label>Image File:</label>
+            <input type="file" id="image" accept="image/*" required>
+        </div>
+        <div>
+            <label>License:</label>
+            <input type="text" id="licence" value="http/hdefe.com" required>
+        </div>
+        <div>
+            <label>Vehicle Number:</label>
+            <input type="text" id="vehicle_no" value="SP-4565" required>
+        </div>
+        <button type="button" onclick="submitForm()">Register (Original)</button>
+        <button type="button" onclick="submitFormSimple()">Register (Simple Form)</button>
+    </form>
+
+    <div id="response"></div>
+
+    <script>
+        function submitForm() {
+            const formData = new FormData();
+
+            // Create the JSON data object
+            const jsonData = {
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                first_name: document.getElementById('first_name').value,
+                last_name: document.getElementById('last_name').value,
+                phone_number: document.getElementById('phone_number').value,
+                default_lat: parseFloat(document.getElementById('default_lat').value),
+                default_lng: parseFloat(document.getElementById('default_lng').value),
+                licence: document.getElementById('licence').value,
+                vehicle_no: document.getElementById('vehicle_no').value
+            };
+
+            // Add the JSON data as a blob (this will be the "data" part)
+            formData.append('data', new Blob([JSON.stringify(jsonData)], {type: 'application/json'}));
+
+            // Add the file (this will be the "file" part)
+            const fileInput = document.getElementById('image');
+            formData.append('file', fileInput.files[0]);
+
+            // Send the request
+            fetch('http://localhost:8080/api/auth/register', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('response').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(error => {
+                document.getElementById('response').innerHTML = '<pre>Error: ' + error + '</pre>';
+            });
+        }
+        function submitFormSimple() {
+            const formData = new FormData();
+
+            // Add each field directly to FormData
+            formData.append('email', document.getElementById('email').value);
+            formData.append('password', document.getElementById('password').value);
+            formData.append('first_name', document.getElementById('first_name').value);
+            formData.append('last_name', document.getElementById('last_name').value);
+            formData.append('phone_number', document.getElementById('phone_number').value);
+            formData.append('default_lat', parseFloat(document.getElementById('default_lat').value));
+            formData.append('default_lng', parseFloat(document.getElementById('default_lng').value));
+            formData.append('licence', document.getElementById('licence').value);
+            formData.append('vehicle_no', document.getElementById('vehicle_no').value);
+
+            // Add the file
+            const fileInput = document.getElementById('image');
+            formData.append('file', fileInput.files[0]);
+
+            // Send the request to the simpler endpoint
+            fetch('http://localhost:8080/api/auth/register-form', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('response').innerHTML = '<h3>Simple Form Response:</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(error => {
+                document.getElementById('response').innerHTML = '<h3>Simple Form Error:</h3><pre>' + error + '</pre>';
+            });
+        }
+</body>
+</html>
+

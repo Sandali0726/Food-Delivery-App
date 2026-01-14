@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package restaurant.restaurant;
+
+option java_multiple_files = true;
+option java_package = "com.example.grpc.restaurant";
+option java_outer_classname = "RestaurantProto";
+
+//give user details
+
+//give Restaurant reviews
+service RestaurantReviewService {
+  rpc GetRestaurantReviews (RestaurantReviewRequest)
+      returns (RestaurantReviewResponse);
+}
+message RestaurantReviewRequest {
+  string restaurant_email = 1; // was Restaurant_id; changed to align with server usage getRestaurantEmail()
+}
+message RestaurantReviewResponse {
+  message Review {
+    string customer_email = 1;
+    string review = 2;
+    float restaurant_rating = 3;
+    int64 order_id = 4;
+  }
+  repeated Review reviews = 1;
+}

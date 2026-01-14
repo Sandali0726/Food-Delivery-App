@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package restaurant;
+
+option java_multiple_files = true;
+option java_package = "com.example.grpc";
+option java_outer_classname = "OrderProto";
+
+service RestaurantOrderService {
+  rpc UpdateOrderStatus (UpdateOrderStatusRequest)
+      returns (UpdateOrderStatusResponse);
+}
+
+message UpdateOrderStatusRequest {
+  int64 orderId = 1;
+  string status = 2;
+}
+
+message UpdateOrderStatusResponse {
+  bool success = 1;
+  string message = 2;
+}

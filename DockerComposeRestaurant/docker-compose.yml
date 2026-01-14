@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  restaurant-service:
+    build:
+      context: ../server/restaurant_service
+      dockerfile: Dockerfile
+    container_name: restaurant-service
+    ports:
+      - "8081:8081"   # HTTP
+      - "9091:9091"   # gRPC (if used)
+    env_file:
+      - ../server/restaurant_service/.env
+    # When running together with a frontend, keep them on the same network
+    networks:
+      - yumy-network
+
+  restaurant-client:
+    build:
+      context: ../client/Restaurant_Client
+      dockerfile: Dockerfile
+    container_name: restaurant-client
+    ports:
+      - "5173:80"  # host:container
+    depends_on:
+      - restaurant-service
+    networks:
+      - yumy-network
+    environment:
+      # Base URL for the frontend to call the backend inside the Docker network
+      - VITE_API_BASE_URL=http://restaurant-service:8081
+
+networks:
+  yumy-network:
+    driver: bridge

@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  rider-service:
+    build:
+      context: .
+      dockerfile: src/Docker/Dockerfile
+    container_name: rider-service-prod
+    ports:
+      - "8080:8080"
+      - "9091:9091"
+    environment:
+      # Use your existing Neon database
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ep-raspy-dust-a4ocg293-pooler.us-east-1.aws.neon.tech:5432/neondb?sslmode=require&channelBinding=require
+      - SPRING_DATASOURCE_USERNAME=neondb_owner
+      - SPRING_DATASOURCE_PASSWORD=npg_0AMT6GJohgIE
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+
+      # HikariCP Settings
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=5
+      - SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=1
+      - SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT=10000
+      - SPRING_DATASOURCE_HIKARI_MAX_LIFETIME=120000
+      - SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=20000
+
+      # JPA configuration
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=false
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+
+      # Kafka configuration (you'll need to replace with your Kafka server)
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+      - SPRING_KAFKA_CONSUMER_GROUP_ID=delivery-service-group
+      - SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET=earliest
+      - SPRING_KAFKA_CONSUMER_ENABLE_AUTO_COMMIT=false
+
+      # gRPC configuration
+      - GRPC_SERVER_PORT=9091
+      - GRPC_SERVER_SECURITY_ENABLED=false
+
+      # Email configuration
+      - SPRING_MAIL_HOST=smtp.gmail.com
+      - SPRING_MAIL_PORT=587
+      - SPRING_MAIL_USERNAME=gayashankavishka2@gmail.com
+      - SPRING_MAIL_PASSWORD=pvfo dluq gcis rzgr
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+
+      # Cloudinary configuration
+      - CLOUDINARY_CLOUD_NAME=dvsmpntdf
+      - CLOUDINARY_API_KEY=637365868341956
+      - CLOUDINARY_API_SECRET=MJz5bVWwclJNAbKc5_DC9qX9sL0
+
+      # File upload configuration
+      - SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE=50MB
+      - SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE=50MB
+
+      # gRPC client configuration
+      - GRPC_CLIENT_USER_SERVICE_ADDRESS=static://localhost:8082
+
+      # Flyway configuration
+      - SPRING_FLYWAY_ENABLED=false
+    networks:
+      - yumy-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  yumy-network:
+    driver: bridge
