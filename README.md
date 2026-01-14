@@ -235,43 +235,77 @@ All services communicate via **gRPC** for high-performance inter-service calls a
 
 ### Microservices Overview
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                          Client Layer                            │
-├─────────────────┬─────────────────┬──────────────────────────────┤
-│  Customer Web   │ Restaurant Web  │      Rider Web               │
-│  (React + Vite) │ (React + Vite)  │    (React + Vite)            │
-│  Port: 3000     │ Port: 5174      │    Port: 5173                │
-└────────┬────────┴────────┬────────┴────────┬─────────────────────┘
-         │                 │                 │
-         │ HTTP/WS         │ HTTP/WS         │ HTTP/WS
-         │                 │                 │
-┌────────▼─────────────────▼─────────────────▼─────────────────────┐
-│                      Service Layer                                │
-├─────────────────┬─────────────────┬──────────────────────────────┤
-│ Customer Service│Restaurant Service│     Rider Service           │
-│  Port: 8085     │  Port: 8083     │     Port: 8080               │
-│  gRPC: 9090     │  gRPC: 9091     │     gRPC: 9092               │
-└────────┬────────┴────────┬────────┴────────┬─────────────────────┘
-         │                 │                 │
-         │    gRPC         │    gRPC         │    gRPC
-         ├─────────────────┼─────────────────┤
-         │                 │                 │
-         ├─────────────────▼─────────────────┤
-         │        Apache Kafka Cluster        │
-         │    (Event Streaming Platform)      │
-         └────────────────┬───────────────────┘
-                          │
-                 ┌────────▼────────┐
-                 │   PostgreSQL    │
-                 │    Database     │
-                 └─────────────────┘
+Each user type (Customer, Restaurant, Rider) has a completely independent stack with its own web application, backend service, and database. Services communicate via gRPC and Kafka for cross-service operations.
 
-External Services:
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                            CUSTOMER STACK                                         │
+│  URL: http://localhost:3000                                                      │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────┐          ┌──────────────────┐         ┌─────────────────┐  │
+│  │  Customer Web   │  HTTP/WS │ Customer Service │   JDBC  │   PostgreSQL    │  │
+│  │ (React + Vite)  │◄────────►│  (Spring Boot)   │◄───────►│  yumy_customer  │  │
+│  │   Port: 3000    │          │   Port: 8085     │         │                 │  │
+│  └─────────────────┘          │   gRPC: 9090     │         └─────────────────┘  │
+│                                └──────────────────┘                              │
+└────────────────────────────────────┬─────────────────────────────────────────────┘
+                                     │ gRPC & Kafka
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                           RESTAURANT STACK                                        │
+│  URL: http://localhost:5174                                                      │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────┐          ┌──────────────────┐         ┌─────────────────┐  │
+│  │ Restaurant Web  │  HTTP/WS │Restaurant Service│   JDBC  │   PostgreSQL    │  │
+│  │ (React + Vite)  │◄────────►│  (Spring Boot)   │◄───────►│ yumy_restaurant │  │
+│  │   Port: 5174    │          │   Port: 8083     │         │                 │  │
+│  └─────────────────┘          │   gRPC: 9091     │         └─────────────────┘  │
+│                                └──────────────────┘                              │
+└────────────────────────────────────┬─────────────────────────────────────────────┘
+                                     │ gRPC & Kafka
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                             RIDER STACK                                           │
+│  URL: http://localhost:5173                                                      │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────┐          ┌──────────────────┐         ┌─────────────────┐  │
+│  │   Rider Web     │  HTTP/WS │  Rider Service   │   JDBC  │   PostgreSQL    │  │
+│  │ (React + Vite)  │◄────────►│  (Spring Boot)   │◄───────►│   yumy_rider    │  │
+│  │   Port: 5173    │          │   Port: 8080     │         │                 │  │
+│  └─────────────────┘          │   gRPC: 9092     │         └─────────────────┘  │
+│                                └──────────────────┘                              │
+└────────────────────────────────────┬─────────────────────────────────────────────┘
+                                     │
+                    ┌────────────────┴──────────────────┐
+                    │                                   │
+         ┌──────────▼──────────┐          ┌────────────▼────────────┐
+         │   Apache Kafka      │          │   gRPC Communication    │
+         │  Event Streaming    │          │   Inter-Service Calls   │
+         │  - Order Events     │          │   - Customer Details    │
+         │  - Status Updates   │          │   - Restaurant Info     │
+         │  - Delivery Tasks   │          │   - Rider Location      │
+         └─────────────────────┘          └─────────────────────────┘
+
+External Services (Shared):
 ├─ Cloudinary (Image Storage)
 ├─ Gmail SMTP (Email Service)
 └─ Mapbox (Maps & Geocoding)
 ```
+
+### Key Architecture Points
+
+1. **Independent Stacks**: Each user role operates on a completely separate application stack
+   - **Customer Stack**: Customers access their own web app (Port 3000) → Customer Service (Port 8085) → Customer Database
+   - **Restaurant Stack**: Restaurants access their own web app (Port 5174) → Restaurant Service (Port 8083) → Restaurant Database  
+   - **Rider Stack**: Riders access their own web app (Port 5173) → Rider Service (Port 8080) → Rider Database
+
+2. **Separate Databases**: Each service has its own PostgreSQL database for data isolation
+   - `yumy_customer` - Stores customer profiles, orders, reviews
+   - `yumy_restaurant` - Stores restaurant profiles, menus, order processing data
+   - `yumy_rider` - Stores rider profiles, delivery tasks, location history
+
+3. **Inter-Service Communication**:
+   - **gRPC**: Synchronous calls for real-time data (e.g., fetching customer details, rider location)
+   - **Kafka**: Asynchronous event streaming for order flow and status updates
+   - **WebSocket**: Real-time updates within each stack (order status, location tracking)
 
 ### Communication Patterns
 
