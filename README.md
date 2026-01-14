@@ -233,58 +233,97 @@ All services communicate via **gRPC** for high-performance inter-service calls a
 
 ## 🔄 System Architecture
 
-### Microservices Overview
+### Architecture Overview
 
-Each user type (Customer, Restaurant, Rider) has a completely independent stack with its own web application, backend service, and database. Services communicate via gRPC and Kafka for cross-service operations.
+The Yumy platform follows a microservices architecture with three independent stacks (Rider, Restaurant, Customer), each having its own database and backend service. The services communicate through Apache Kafka for event streaming and gRPC for inter-service communication.
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                            CUSTOMER STACK                                         │
-│  URL: http://localhost:3000                                                      │
-├──────────────────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐          ┌──────────────────┐         ┌─────────────────┐  │
-│  │  Customer Web   │  HTTP/WS │ Customer Service │   JDBC  │   PostgreSQL    │  │
-│  │ (React + Vite)  │◄────────►│  (Spring Boot)   │◄───────►│  yumy_customer  │  │
-│  │   Port: 3000    │          │   Port: 8085     │         │                 │  │
-│  └─────────────────┘          │   gRPC: 9090     │         └─────────────────┘  │
-│                                └──────────────────┘                              │
-└────────────────────────────────────┬─────────────────────────────────────────────┘
-                                     │ gRPC & Kafka
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                           RESTAURANT STACK                                        │
-│  URL: http://localhost:5174                                                      │
-├──────────────────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐          ┌──────────────────┐         ┌─────────────────┐  │
-│  │ Restaurant Web  │  HTTP/WS │Restaurant Service│   JDBC  │   PostgreSQL    │  │
-│  │ (React + Vite)  │◄────────►│  (Spring Boot)   │◄───────►│ yumy_restaurant │  │
-│  │   Port: 5174    │          │   Port: 8083     │         │                 │  │
-│  └─────────────────┘          │   gRPC: 9091     │         └─────────────────┘  │
-│                                └──────────────────┘                              │
-└────────────────────────────────────┬─────────────────────────────────────────────┘
-                                     │ gRPC & Kafka
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                             RIDER STACK                                           │
-│  URL: http://localhost:5173                                                      │
-├──────────────────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐          ┌──────────────────┐         ┌─────────────────┐  │
-│  │   Rider Web     │  HTTP/WS │  Rider Service   │   JDBC  │   PostgreSQL    │  │
-│  │ (React + Vite)  │◄────────►│  (Spring Boot)   │◄───────►│   yumy_rider    │  │
-│  │   Port: 5173    │          │   Port: 8080     │         │                 │  │
-│  └─────────────────┘          │   gRPC: 9092     │         └─────────────────┘  │
-│                                └──────────────────┘                              │
-└────────────────────────────────────┬─────────────────────────────────────────────┘
-                                     │
-                    ┌────────────────┴──────────────────┐
-                    │                                   │
-         ┌──────────▼──────────┐          ┌────────────▼────────────┐
-         │   Apache Kafka      │          │   gRPC Communication    │
-         │  Event Streaming    │          │   Inter-Service Calls   │
-         │  - Order Events     │          │   - Customer Details    │
-         │  - Status Updates   │          │   - Restaurant Info     │
-         │  - Delivery Tasks   │          │   - Rider Location      │
-         └─────────────────────┘          └─────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              RIDER SIDE                                          │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
+│   ┌──────────────┐                                                              │
+│   │   Rider DB   │                                                              │
+│   │ (PostgreSQL) │                                                              │
+│   └──────┬───────┘                                                              │
+│          │                                                                       │
+│          │ JDBC                                                                  │
+│          │                                                                       │
+│   ┌──────▼───────┐          Apache Kafka /                                      │
+│   │    Rider     │◄─────────gRPC──────────┐                                     │
+│   │  Back-End    │      Inter-back-end    │                                     │
+│   │              │      communication     │                                     │
+│   └──────┬───────┘                        │                                     │
+│          │                                │                                     │
+│          │ REST                           │                                     │
+│          │                                │                                     │
+│   ┌──────▼───────────┐                   │                                     │
+│   │ React Front-End  │                   │                                     │
+│   │    for Rider     │                   │                                     │
+│   │  (Web/Mobile)    │                   │                                     │
+│   └──────────────────┘                   │                                     │
+│                                          │                                     │
+└──────────────────────────────────────────┼─────────────────────────────────────┘
+                                           │
+┌──────────────────────────────────────────┼─────────────────────────────────────┐
+│                          RESTAURANT SIDE │                                      │
+├──────────────────────────────────────────┼─────────────────────────────────────┤
+│                                          │                                      │
+│   ┌──────────────┐                      │                                      │
+│   │ Restaurant   │                      │                                      │
+│   │      DB      │                      │                                      │
+│   │ (PostgreSQL) │                      │                                      │
+│   └──────┬───────┘                      │                                      │
+│          │                              │                                      │
+│          │ JDBC                         │                                      │
+│          │                              │                                      │
+│   ┌──────▼───────┐       Apache Kafka /│                                      │
+│   │ Restaurant   │◄──────gRPC──────────┤                                      │
+│   │  Back-End    │   Inter-back-end    │                                      │
+│   │              │   communication     │                                      │
+│   └──────┬───────┘                     │                                      │
+│          │                             │                                      │
+│          │ REST                        │ REST                                 │
+│          │                             │                                      │
+│   ┌──────▼─────────────┐               │                                      │
+│   │ React Front-End for│               │                                      │
+│   │    Restaurant      │               │                                      │
+│   │   (Web/Mobile)     │               │                                      │
+│   └────────────────────┘               │                                      │
+│                                        │                                      │
+└────────────────────────────────────────┼──────────────────────────────────────┘
+                                         │
+┌────────────────────────────────────────┼──────────────────────────────────────┐
+│                          CUSTOMER SIDE │                                       │
+├────────────────────────────────────────┼──────────────────────────────────────┤
+│                                        │                                       │
+│   ┌──────────────┐                    │                                       │
+│   │  Customer    │                    │                                       │
+│   │      DB      │                    │                                       │
+│   │ (PostgreSQL) │                    │                                       │
+│   └──────┬───────┘                    │                                       │
+│          │                            │                                       │
+│          │ JDBC                       │                                       │
+│          │                            │                                       │
+│   ┌──────▼───────┐    Apache Kafka / │                                       │
+│   │   Customer   │◄───────gRPC───────┘                                       │
+│   │  Back-End    │    Inter-back-end                                         │
+│   │              │    communication                                          │
+│   └──────┬───────┘                                                           │
+│          │                                                                    │
+│          │ REST                                                               │
+│          │                                                                    │
+│   ┌──────▼─────────────┐                                                     │
+│   │ React Front-End for│                                                     │
+│   │     Customer       │                                                     │
+│   │   (Web/Mobile)     │                                                     │
+│   └────────────────────┘                                                     │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
 
-External Services (Shared):
+External Services:
+├─ Apache Kafka (Event Streaming - Order events, status updates, delivery tasks)
+├─ gRPC (Inter-service Communication - Customer details, rider location, restaurant info)
 ├─ Cloudinary (Image Storage)
 ├─ Gmail SMTP (Email Service)
 └─ Mapbox (Maps & Geocoding)
@@ -292,39 +331,18 @@ External Services (Shared):
 
 ### Key Architecture Points
 
-1. **Independent Stacks**: Each user role operates on a completely separate application stack
-   - **Customer Stack**: Customers access their own web app (Port 3000) → Customer Service (Port 8085) → Customer Database
-   - **Restaurant Stack**: Restaurants access their own web app (Port 5174) → Restaurant Service (Port 8083) → Restaurant Database  
-   - **Rider Stack**: Riders access their own web app (Port 5173) → Rider Service (Port 8080) → Rider Database
+1. **Three Independent Stacks**: Each user role has a complete isolated stack
+   - **Rider Side**: Rider Front-End → Rider Back-End → Rider DB
+   - **Restaurant Side**: Restaurant Front-End → Restaurant Back-End → Restaurant DB
+   - **Customer Side**: Customer Front-End → Customer Back-End → Customer DB
 
-2. **Separate Databases**: Each service has its own PostgreSQL database for data isolation
-   - `yumy_customer` - Stores customer profiles, orders, reviews
-   - `yumy_restaurant` - Stores restaurant profiles, menus, order processing data
-   - `yumy_rider` - Stores rider profiles, delivery tasks, location history
+2. **Communication Patterns**:
+   - **REST API**: Front-end communicates with its respective back-end via REST
+   - **Apache Kafka**: Event-driven communication between back-end services for asynchronous operations
+   - **gRPC**: High-performance inter-service communication between back-end services
+   - **JDBC**: Database connectivity for each service
 
-3. **Inter-Service Communication**:
-   - **gRPC**: Synchronous calls for real-time data (e.g., fetching customer details, rider location)
-   - **Kafka**: Asynchronous event streaming for order flow and status updates
-   - **WebSocket**: Real-time updates within each stack (order status, location tracking)
-
-### Communication Patterns
-
-1. **Synchronous (gRPC)**:
-   - Customer Service ↔ Restaurant Service (restaurant details, order details)
-   - Customer Service ↔ Rider Service (rider details, location)
-   - Rider Service ↔ Customer Service (order details, customer info)
-   - Restaurant Service ↔ Rider Service (rider assignment)
-
-2. **Asynchronous (Kafka)**:
-   - Order Created → Restaurant Service
-   - Order Status Updated → Customer Service
-   - Order Ready → Rider Service
-   - Order Delivered → Customer Service
-
-3. **Real-Time (WebSocket/STOMP)**:
-   - Customer: Order status updates, rider location
-   - Restaurant: New order notifications
-   - Rider: New delivery requests, location broadcasts
+3. **Data Isolation**: Each service maintains its own PostgreSQL database for complete data separation
 
 ---
 
